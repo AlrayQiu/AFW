@@ -1,47 +1,50 @@
 package com.alray.afw;
 
-import android.annotation.SuppressLint;
-import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
-import android.graphics.Color;
+import android.graphics.Point;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 
-import com.alray.afw.mouse.Mouse;
-import com.google.android.material.snackbar.Snackbar;
+import com.alray.afw.App_Level.mouse.Mouse;
+import com.alray.afw.DataLnk_Level.Data_Transmit;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.provider.Settings;
-import android.view.Gravity;
-import android.view.View;
-
-import androidx.core.view.WindowCompat;
-import androidx.navigation.NavController;
-import androidx.navigation.Navigation;
-import androidx.navigation.ui.AppBarConfiguration;
-import androidx.navigation.ui.NavigationUI;
-
-import com.alray.afw.databinding.ActivityMainBinding;
+import android.view.Display;
 
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.WindowManager;
 import android.widget.TextView;
 import android.widget.Toast;
-import com.alray.afw.mouse.MouseLogic;
+
 
 
 public class MainActivity extends AppCompatActivity  {
 
+    public static int screenWidth;//得到屏幕的宽度
+    public static int screenHeight;//得到屏幕的高度
     TextView mouseView;
     WindowManager wm;
 
+    Data_Transmit transmit;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        startFloatingMouseService();
+//        startFloatingMouseService();
+
+        Display display = this.getWindowManager().getDefaultDisplay();
+        Point point = new Point();
+        display.getSize(point);
+        screenWidth = point.x;//得到屏幕的宽度
+        screenHeight = point.y;//得到屏幕的高度
+
+        transmit = new Data_Transmit(this);
+
+        transmit.start();
+        transmit.run();
+
         super.onCreate(savedInstanceState);
     }
 

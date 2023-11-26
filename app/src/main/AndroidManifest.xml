@@ -25,7 +25,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <service android:name=".mouse.Mouse"></service>
+        <service android:name=".App_Level.mouse.Mouse"></service>
     </application>
 
 </manifest>
