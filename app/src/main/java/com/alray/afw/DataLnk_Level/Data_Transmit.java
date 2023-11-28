@@ -1,13 +1,12 @@
 package com.alray.afw.DataLnk_Level;
 
 import android.content.Context;
-import android.util.Log;
-import android.widget.Toast;
+import android.os.Handler;
+import android.os.Message;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.ServerSocket;
@@ -18,12 +17,16 @@ public class Data_Transmit extends Thread {
     private static Context Context;
     boolean isLoop = true;
 
-    public Data_Transmit(Context context)
+    Handler mhandler;
+
+    public Data_Transmit(Context context, Handler handler)
     {
         Context = context;
+        mhandler = handler;
     }
 
-    public void setIsLoop(boolean isLoop) {
+    public void setIsLoop(boolean isLoop)
+    {
         this.isLoop = isLoop;
     }
 
@@ -37,18 +40,16 @@ public class Data_Transmit extends Thread {
 
         ServerSocket serverSocket = null;
         try {
-            serverSocket = new ServerSocket(9000);
-
+            serverSocket = new ServerSocket(9999);
             while (isLoop) {
                 final Socket socket = serverSocket.accept();
-                new Thread(new SocketReadThread(socket)).start();
+                new Thread(new SocketReadThread(socket,mhandler)).start();
             }
 
         } catch (Exception e) {
             e.printStackTrace();
 
         } finally {
-            Log.d("anzi", "destory");
 
             if (serverSocket != null) {
                 try {
@@ -71,32 +72,45 @@ public class Data_Transmit extends Thread {
         private BufferedInputStream in;
         private BufferedOutputStream outputStream;
         Socket mSocket;
+        Handler mhandler;
+        Message msg = new Message();
 
-        public SocketReadThread(Socket mSocket) throws IOException {
+        public SocketReadThread(Socket mSocket,Handler handler) throws IOException {
 
             this.in = new BufferedInputStream(mSocket.getInputStream());
             outputStream = new BufferedOutputStream(mSocket.getOutputStream());
             this.mSocket = mSocket;
+            mhandler = handler;
         }
 
         public void run( ) {
             try {
                 String readMsg = "yyyy";
-                int currCMD = 0;
+                long  currCMD = 0;
                 while (true) {
                     try {
                         if (!mSocket.isConnected()) {
+
+                            msg = mhandler.obtainMessage();
+                            msg.what = 0;
+                            msg.obj ="disconnect";
+
+                            mhandler.sendMessage(msg);
                             break;
                         }
-
                         //   读到后台发送的消息  然后去处理
                         currCMD = readMsgFromSocket(in);
                         //    处理读到的消息(主要是身份证信息),然后保存在sp中;
                         if (currCMD == 0) {
-                            break;
+                            continue;
                         }
-                        Toast.makeText(Context, String.format("{0}",currCMD), Toast.LENGTH_SHORT).show();
 
+                        msg = mhandler.obtainMessage();
+
+                        msg.what = 0;
+                        msg.obj = (Object)(currCMD);
+
+                        mhandler.sendMessage(msg);
 
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -111,18 +125,23 @@ public class Data_Transmit extends Thread {
     }
 
     int MAX_BUFFER_BYTES = 4;
-    public int readMsgFromSocket(InputStream in) {
-        byte[] tempbuffer = new byte[MAX_BUFFER_BYTES];
-        int msg = 0;
+    byte[] buffer = new byte[MAX_BUFFER_BYTES];
+    public long readMsgFromSocket(InputStream in) {
+        long tmsg = 0;
         try {
-            if(in.read(tempbuffer, 0, tempbuffer.length) == 0)
+            if(in.read(buffer, 0, buffer.length) == 0)
                 return 0;
-            msg = tempbuffer[3] << 24 | tempbuffer[2] << 16 | tempbuffer[1] << 8 | tempbuffer[0];
+            for(int i = 0;i < 4;i++)
+            {
+                tmsg |= buffer[3 -i];
+                tmsg <<= 8;
+            }
 
         } catch (Exception e) {
             e.printStackTrace();
+            return 0;
         }
-        return msg ;
+        return tmsg ;
     }
 
 }

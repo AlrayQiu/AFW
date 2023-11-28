@@ -10,6 +10,9 @@ import com.alray.afw.DataLnk_Level.Data_Transmit;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 import android.provider.Settings;
 import android.view.Display;
 
@@ -30,20 +33,34 @@ public class MainActivity extends AppCompatActivity  {
 
     Data_Transmit transmit;
 
+    Thread t;
+
+
+Handler mhandler;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 //        startFloatingMouseService();
-
         Display display = this.getWindowManager().getDefaultDisplay();
         Point point = new Point();
         display.getSize(point);
         screenWidth = point.x;//得到屏幕的宽度
         screenHeight = point.y;//得到屏幕的高度
 
-        transmit = new Data_Transmit(this);
+        mhandler=new Handler(Looper.getMainLooper()){
+            @Override
+            public void handleMessage(Message msg) {
+                if(msg.what==0){
+                    long l = (long )msg.obj;
+                    if(l == 0xff0000ff)
+                        Toast.makeText(getApplicationContext(),"连接成功",Toast.LENGTH_SHORT).show();
+                }
+            }
+        };
+        t = new Data_Transmit(this,mhandler);
+        t.start();
 
-        transmit.start();
-        transmit.run();
 
         super.onCreate(savedInstanceState);
     }
