@@ -32,7 +32,7 @@ public class Data_Transmit extends Thread {
 
     public void SetContext(Context context)
     {
-       Context = context;
+        Context = context;
     }
 
     @Override
@@ -82,7 +82,7 @@ public class Data_Transmit extends Thread {
             this.mSocket = mSocket;
             mhandler = handler;
         }
-
+        @Override
         public void run( ) {
             try {
                 String readMsg = "yyyy";
@@ -105,11 +105,9 @@ public class Data_Transmit extends Thread {
                             continue;
                         }
 
-                        msg = mhandler.obtainMessage();
-
+                        msg = new Message();
                         msg.what = 0;
                         msg.obj = (Object)(currCMD);
-
                         mhandler.sendMessage(msg);
 
                     } catch (Exception e) {
@@ -124,17 +122,17 @@ public class Data_Transmit extends Thread {
         }
     }
 
-    int MAX_BUFFER_BYTES = 4;
+    int MAX_BUFFER_BYTES = 8;
     byte[] buffer = new byte[MAX_BUFFER_BYTES];
-    public long readMsgFromSocket(InputStream in) {
+    public long  readMsgFromSocket(InputStream in) {
         long tmsg = 0;
         try {
             if(in.read(buffer, 0, buffer.length) == 0)
                 return 0;
-            for(int i = 0;i < 4;i++)
+            for(int i = 7;i >=0;i--)
             {
-                tmsg |= buffer[3 -i];
                 tmsg <<= 8;
+                tmsg |= (buffer[i] & 0xff);
             }
 
         } catch (Exception e) {

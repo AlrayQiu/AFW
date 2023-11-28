@@ -6,6 +6,7 @@ import android.net.Uri;
 import android.os.Bundle;
 
 import com.alray.afw.App_Level.mouse.Mouse;
+import com.alray.afw.App_Level.mouse.MouseLogic;
 import com.alray.afw.DataLnk_Level.Data_Transmit;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -34,6 +35,7 @@ public class MainActivity extends AppCompatActivity  {
     Data_Transmit transmit;
 
     Thread t;
+    static public MouseLogic mouse;
 
 
 Handler mhandler;
@@ -48,13 +50,25 @@ Handler mhandler;
         screenWidth = point.x;//得到屏幕的宽度
         screenHeight = point.y;//得到屏幕的高度
 
+
         mhandler=new Handler(Looper.getMainLooper()){
             @Override
             public void handleMessage(Message msg) {
                 if(msg.what==0){
-                    long l = (long )msg.obj;
-                    if(l == 0xff0000ff)
-                        Toast.makeText(getApplicationContext(),"连接成功",Toast.LENGTH_SHORT).show();
+                    long l = (long) msg.obj;
+                    if((l&0xf000000000000000l) == 0x1000000000000000l)
+                    {
+                        if (mouse == null)
+                            return;
+                        mouse.changeInfo(l);
+                    }
+                    else if(l == 0xffffffffffffffffl) {
+                        Toast.makeText(getApplicationContext(), "连接成功", Toast.LENGTH_SHORT).show();
+                        startFloatingMouseService();
+//                        while (mouse == null)
+//                            continue;
+                        mouse.Connected = true;
+                    }
                 }
             }
         };
